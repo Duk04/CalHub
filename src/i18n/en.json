@@ -1,0 +1,106 @@
+{
+  "app": {
+    "name": "CalHub",
+    "tagline": "AI-powered calorie tracker"
+  },
+  "nav": {
+    "home": "Home",
+    "log": "Log",
+    "favorites": "Favorites",
+    "stats": "Stats",
+    "profile": "Profile"
+  },
+  "auth": {
+    "login": "Log in",
+    "register": "Sign up",
+    "logout": "Log out",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?"
+  },
+  "log": {
+    "title": "Log Food",
+    "photo": "Take Photo",
+    "upload": "Upload Photo",
+    "manual": "Enter Manually",
+    "barcode": "Scan Barcode",
+    "analyzing": "Analyzing...",
+    "addToLog": "Add to Log",
+    "mealType": "Meal Type",
+    "calories": "Calories",
+    "protein": "Protein",
+    "fat": "Fat",
+    "carbs": "Carbs",
+    "fiber": "Fiber",
+    "servingSize": "Serving Size"
+  },
+  "daily": {
+    "title": "Today's Food",
+    "goal": "Goal",
+    "remaining": "Remaining",
+    "consumed": "Consumed",
+    "water": "Water",
+    "glasses": "glasses",
+    "noLogs": "No food logged today"
+  },
+  "meal": {
+    "breakfast": "Breakfast",
+    "lunch": "Lunch",
+    "dinner": "Dinner",
+    "snack": "Snack",
+    "other": "Other"
+  },
+  "profile": {
+    "title": "Profile",
+    "goals": "Goals",
+    "calorieGoal": "Calorie Goal",
+    "waterGoal": "Water Goal",
+    "age": "Age",
+    "height": "Height (cm)",
+    "weight": "Weight (kg)",
+    "gender": {
+      "label": "Gender",
+      "male": "Male",
+      "female": "Female"
+    },
+    "activity": {
+      "label": "Activity Level",
+      "sedentary": "Sedentary",
+      "light": "Lightly active",
+      "moderate": "Moderately active",
+      "active": "Active",
+      "very_active": "Very active"
+    },
+    "save": "Save",
+    "saved": "Saved!"
+  },
+  "stats": {
+    "title": "Statistics",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "streak": "Logging streak",
+    "days": "days",
+    "average": "Average calories"
+  },
+  "weight": {
+    "title": "Weight Tracking",
+    "add": "Log Weight",
+    "current": "Current weight",
+    "trend": "Weight trend"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "success": "Success",
+    "kcal": "kcal",
+    "g": "g",
+    "ml": "ml"
+  }
+}
