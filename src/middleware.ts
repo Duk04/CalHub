@@ -81,7 +81,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Rate limiting for other API routes
   if (pathname.startsWith('/api/') && !PUBLIC_API_PATHS.includes(pathname)) {
     if (!rateLimit(`api:${ip}`, 60, 60_000)) {
       return NextResponse.json({ data: null, error: 'Хэт олон хүсэлт.' }, { status: 429 })
