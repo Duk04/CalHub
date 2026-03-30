@@ -3,25 +3,20 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #fbfaf4;
+  --foreground: #161617;
   --card: #ffffff;
-  --border: #e2e8f0;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0f;
-    --foreground: #f1f5f9;
-    --card: #111118;
-    --border: #1e1e2e;
-  }
+  --card-2: #fbfaf6;
+  --border: #ece5d5;
+  --muted: #7d7668;
+  --brand: #97ae29;
+  --orange: #f57a4a;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-space-grotesk), var(--font-geist-sans), system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -46,7 +41,7 @@ select {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: #d2cab8; border-radius: 2px; }
 
 /* Skeleton shimmer */
 @keyframes shimmer {
@@ -54,13 +49,9 @@ select {
   100% { background-position: 200% 0; }
 }
 .skeleton {
-  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background: linear-gradient(90deg, #f4efe3 25%, #ffffff 50%, #f4efe3 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s infinite;
-}
-.dark .skeleton {
-  background: linear-gradient(90deg, #1e1e2e 25%, #2a2a3e 50%, #1e1e2e 75%);
-  background-size: 200% 100%;
 }
 
 /* Fade in */
@@ -74,10 +65,7 @@ select {
 
 /* Glass card */
 .glass {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-}
-.dark .glass {
-  background: rgba(17, 17, 24, 0.7);
 }

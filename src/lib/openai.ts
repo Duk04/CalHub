@@ -65,6 +65,16 @@ export async function analyzeFood(imageBase64: string, mimeType: string): Promis
 
   // Strip markdown code blocks if present
   const cleaned = content.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()
-  const parsed = JSON.parse(cleaned) as NutritionData[]
-  return Array.isArray(parsed) ? parsed : [parsed]
+
+  // If the model returned a non-JSON apology or explanation, surface a friendly error
+  if (!cleaned.startsWith('[') && !cleaned.startsWith('{')) {
+    throw new Error('Зургаас хоол илрүүлэх боломжгүй байна. Өөр зураг оруулна уу.')
+  }
+
+  try {
+    const parsed = JSON.parse(cleaned) as NutritionData[]
+    return Array.isArray(parsed) ? parsed : [parsed]
+  } catch {
+    throw new Error('Зургаас хоол илрүүлэх боломжгүй байна. Өөр зураг оруулна уу.')
+  }
 }

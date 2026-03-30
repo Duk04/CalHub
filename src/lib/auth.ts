@@ -19,6 +19,10 @@ interface JwtPayload {
   email: string
 }
 
+interface PasswordResetTokenPayload extends JwtPayload {
+  purpose: 'password_reset'
+}
+
 export function signToken(payload: JwtPayload): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' })
 }
@@ -26,6 +30,27 @@ export function signToken(payload: JwtPayload): string {
 export function verifyToken(token: string): JwtPayload | null {
   try {
     return jwt.verify(token, JWT_SECRET) as JwtPayload
+  } catch {
+    return null
+  }
+}
+
+export function signPasswordResetToken({
+  userId,
+  email,
+  passwordHash,
+}: JwtPayload & { passwordHash: string }): string {
+  return jwt.sign(
+    { userId, email, purpose: 'password_reset' satisfies PasswordResetTokenPayload['purpose'] },
+    `${JWT_SECRET}:${passwordHash}`,
+    { expiresIn: '1h' },
+  )
+}
+
+export function verifyPasswordResetToken(token: string, passwordHash: string): PasswordResetTokenPayload | null {
+  try {
+    const payload = jwt.verify(token, `${JWT_SECRET}:${passwordHash}`) as PasswordResetTokenPayload
+    return payload.purpose === 'password_reset' ? payload : null
   } catch {
     return null
   }

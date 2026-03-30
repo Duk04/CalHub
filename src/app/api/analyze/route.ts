@@ -29,9 +29,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ data: { items }, error: null })
   } catch (err) {
     console.error('Analyze error:', err)
-    return NextResponse.json(
-      { data: null, error: 'Хоол таних явцад алдаа гарлаа. Дахин оролдоно уу.' },
-      { status: 500 },
-    )
+    const message = err instanceof Error ? err.message : 'Хоол таних явцад алдаа гарлаа. Дахин оролдоно уу.'
+    return NextResponse.json({ data: null, error: message }, { status: 500 })
   }
 }

@@ -30,23 +30,23 @@ interface WorkoutPlan {
   days: WorkoutDay[]
 }
 
-const GOALS: { value: FitnessGoal; labelMn: string; emoji: string }[] = [
-  { value: 'lose_weight', labelMn: 'Жин хасах', emoji: '🔥' },
-  { value: 'build_muscle', labelMn: 'Булчин хөгжүүлэх', emoji: '💪' },
-  { value: 'maintain', labelMn: 'Хэвийн байдлаа хадгалах', emoji: '⚖️' },
-  { value: 'improve_fitness', labelMn: 'Тэсвэр чийрэгжүүлэх', emoji: '🏃' },
+const GOALS: { value: FitnessGoal; label: string; emoji: string }[] = [
+  { value: 'lose_weight', label: 'Lose weight', emoji: '🔥' },
+  { value: 'build_muscle', label: 'Build muscle', emoji: '💪' },
+  { value: 'maintain', label: 'Maintain', emoji: '⚖️' },
+  { value: 'improve_fitness', label: 'Improve fitness', emoji: '🏃' },
 ]
 
-const EQUIPMENT_OPTIONS: { value: Equipment; labelMn: string; emoji: string }[] = [
-  { value: 'gym', labelMn: 'Биеийн тамирын заал', emoji: '🏋️' },
-  { value: 'home', labelMn: 'Гэрийн тоног төхөөрөмж', emoji: '🏠' },
-  { value: 'none', labelMn: 'Тоног төхөөрөмжгүй', emoji: '🧘' },
+const EQUIPMENT_OPTIONS: { value: Equipment; label: string; emoji: string }[] = [
+  { value: 'gym', label: 'Gym', emoji: '🏋️' },
+  { value: 'home', label: 'Home equipment', emoji: '🏠' },
+  { value: 'none', label: 'No equipment', emoji: '🧘' },
 ]
 
-const LEVEL_OPTIONS: { value: FitnessLevel; labelMn: string }[] = [
-  { value: 'beginner', labelMn: 'Эхлэгч' },
-  { value: 'intermediate', labelMn: 'Дунд' },
-  { value: 'advanced', labelMn: 'Дэвшилтэт' },
+const LEVEL_OPTIONS: { value: FitnessLevel; label: string }[] = [
+  { value: 'beginner', label: 'Beginner' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced', label: 'Advanced' },
 ]
 
 export default function WorkoutPage() {
@@ -71,174 +71,150 @@ export default function WorkoutPage() {
         body: JSON.stringify({ goal, daysPerWeek, equipment, fitnessLevel }),
       })
       const { data, error: err } = await res.json()
-      if (err) { setError(err); return }
+      if (err) {
+        setError(err)
+        return
+      }
       setPlan(data)
       setExpandedDay(0)
     } catch {
-      setError('Сүлжээний алдаа. Дахин оролдоно уу.')
+      setError('Network error. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="max-w-lg mx-auto px-4 pt-6 pb-8 space-y-4">
-      <h1 className="text-xl font-bold text-gray-900 dark:text-white">Workout Plan</h1>
+    <div className="mx-auto max-w-lg space-y-4 px-4 pb-8 pt-6">
+      <h1 className="text-[28px] font-semibold tracking-[-0.04em] text-[#161617]">Workout Plan</h1>
 
-      {/* Goal */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Зорилго</h2>
+      <SectionCard title="Goal">
         <div className="grid grid-cols-2 gap-2">
-          {GOALS.map(g => (
+          {GOALS.map((g) => (
             <button
               key={g.value}
               onClick={() => setGoal(g.value)}
-              className={`py-3 px-2 rounded-xl text-sm font-medium transition-colors flex flex-col items-center gap-1 ${
-                goal === g.value
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
+              className={`flex flex-col items-center gap-1 rounded-2xl px-2 py-3 text-sm font-medium transition-colors ${
+                goal === g.value ? 'bg-[#97AE29] text-white' : 'border border-[#ECE5D5] bg-[#FBFAF6] text-[#7D7668]'
               }`}
             >
               <span className="text-xl">{g.emoji}</span>
-              <span>{g.labelMn}</span>
+              <span>{g.label}</span>
             </button>
           ))}
         </div>
-      </div>
+      </SectionCard>
 
-      {/* Days per week */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-          7 хоногт хэдэн өдөр дасгал хийх вэ?
-        </h2>
+      <SectionCard title="How many days per week do you want to work out?">
         <div className="flex gap-2">
-          {[3, 4, 5, 6].map(d => (
+          {[3, 4, 5, 6].map((d) => (
             <button
               key={d}
               onClick={() => setDaysPerWeek(d)}
-              className={`flex-1 py-3 rounded-xl text-sm font-bold transition-colors ${
-                daysPerWeek === d
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
+              className={`flex-1 rounded-xl py-3 text-sm font-bold transition-colors ${
+                daysPerWeek === d ? 'bg-[#97AE29] text-white' : 'border border-[#ECE5D5] bg-[#FBFAF6] text-[#7D7668]'
               }`}
             >
               {d}
             </button>
           ))}
         </div>
-      </div>
+      </SectionCard>
 
-      {/* Equipment */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Тоног төхөөрөмж</h2>
+      <SectionCard title="Equipment">
         <div className="space-y-2">
-          {EQUIPMENT_OPTIONS.map(e => (
+          {EQUIPMENT_OPTIONS.map((e) => (
             <button
               key={e.value}
               onClick={() => setEquipment(e.value)}
-              className={`w-full py-3 px-4 rounded-xl text-sm font-medium text-left flex items-center gap-3 transition-colors ${
-                equipment === e.value
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
+              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors ${
+                equipment === e.value ? 'bg-[#97AE29] text-white' : 'border border-[#ECE5D5] bg-[#FBFAF6] text-[#7D7668]'
               }`}
             >
               <span className="text-lg">{e.emoji}</span>
-              {e.labelMn}
+              {e.label}
             </button>
           ))}
         </div>
-      </div>
+      </SectionCard>
 
-      {/* Fitness level */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 space-y-3">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Фитнессийн түвшин</h2>
+      <SectionCard title="Fitness level">
         <div className="flex gap-2">
-          {LEVEL_OPTIONS.map(l => (
+          {LEVEL_OPTIONS.map((l) => (
             <button
               key={l.value}
               onClick={() => setFitnessLevel(l.value)}
-              className={`flex-1 py-3 rounded-xl text-sm font-medium transition-colors ${
-                fitnessLevel === l.value
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700'
+              className={`flex-1 rounded-xl py-3 text-sm font-medium transition-colors ${
+                fitnessLevel === l.value ? 'bg-[#97AE29] text-white' : 'border border-[#ECE5D5] bg-[#FBFAF6] text-[#7D7668]'
               }`}
             >
-              {l.labelMn}
+              {l.label}
             </button>
           ))}
         </div>
-      </div>
+      </SectionCard>
 
       {error && (
-        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm rounded-xl px-4 py-3">
+        <div className="rounded-xl border border-[#F0C8BD] bg-[#FFF2ED] px-4 py-3 text-sm text-[#C75A42]">
           {error}
         </div>
       )}
 
-      {/* Generate button */}
       <button
         onClick={handleGenerate}
         disabled={loading}
-        className="w-full py-4 rounded-2xl bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-bold text-base transition-colors shadow-lg shadow-green-500/20 flex items-center justify-center gap-2"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[#F57A4A] py-4 text-base font-bold text-white shadow-[0_18px_40px_rgba(245,122,74,0.28)] transition-colors disabled:opacity-50"
       >
         {loading ? (
           <>
-            <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-            AI тооцоолж байна...
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            Building your plan...
           </>
         ) : (
           <>
-            <SparklesIcon className="w-5 h-5" />
-            Workout план үүсгэх
+            <SparklesIcon className="h-5 w-5" />
+            Generate workout plan
           </>
         )}
       </button>
 
-      {/* Plan result */}
       {plan && (
         <div className="space-y-3">
-          <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-2xl p-4">
-            <h2 className="font-bold text-green-800 dark:text-green-200 text-base">{plan.planNameMn}</h2>
-            <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">{plan.planName}</p>
-            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-              7 хоногт {plan.daysPerWeek} өдөр
-            </p>
+          <div className="rounded-[28px] border border-[#E7E6C3] bg-[#F5F9DE] p-4">
+            <h2 className="text-base font-bold text-[#637612]">{plan.planName}</h2>
+            <p className="mt-1 text-xs text-[#7E8D38]">{plan.daysPerWeek} days per week</p>
           </div>
 
           {plan.days.map((day, idx) => (
-            <div key={idx} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div key={idx} className="overflow-hidden rounded-[24px] border border-[#ECE5D5] bg-white shadow-[0_12px_30px_rgba(219,215,195,0.18)]">
               <button
-                className="w-full px-4 py-3.5 flex items-center justify-between text-left"
+                className="flex w-full items-center justify-between px-4 py-3.5 text-left"
                 onClick={() => setExpandedDay(expandedDay === idx ? null : idx)}
               >
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900 px-2 py-0.5 rounded-full">
-                      {day.dayNumber}-р өдөр
+                    <span className="rounded-full bg-[#EDF5C8] px-2 py-0.5 text-xs font-semibold text-[#72841A]">
+                      Day {day.dayNumber}
                     </span>
-                    <span className="text-xs text-gray-400">{day.estimatedMinutes} мин</span>
+                    <span className="text-xs text-[#8A8274]">{day.estimatedMinutes} min</span>
                   </div>
-                  <p className="font-semibold text-gray-900 dark:text-white text-sm mt-1">{day.nameMn}</p>
-                  <p className="text-xs text-gray-400">{day.name}</p>
+                  <p className="mt-1 text-sm font-semibold text-[#161617]">{day.name}</p>
                 </div>
-                <ChevronIcon className={`w-5 h-5 text-gray-400 transition-transform ${expandedDay === idx ? 'rotate-180' : ''}`} />
+                <ChevronIcon className={`h-5 w-5 text-[#8A8274] transition-transform ${expandedDay === idx ? 'rotate-180' : ''}`} />
               </button>
 
               {expandedDay === idx && (
-                <div className="border-t border-gray-100 dark:border-gray-800 divide-y divide-gray-50 dark:divide-gray-800">
+                <div className="divide-y divide-[#F3EEE2] border-t border-[#F3EEE2]">
                   {day.exercises.map((ex, ei) => (
                     <div key={ei} className="px-4 py-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <p className="font-medium text-gray-900 dark:text-white text-sm">{ex.nameMn}</p>
-                          <p className="text-xs text-gray-400">{ex.name}</p>
-                          {ex.notes && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">{ex.notes}</p>
-                          )}
+                          <p className="text-sm font-medium text-[#161617]">{ex.name}</p>
+                          {ex.notes && <p className="mt-1 text-xs italic text-[#8A8274]">{ex.notes}</p>}
                         </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-sm font-bold text-gray-900 dark:text-white">{ex.sets} × {ex.reps}</p>
-                          <p className="text-xs text-gray-400">{ex.restSeconds}с амрах</p>
+                        <div className="shrink-0 text-right">
+                          <p className="text-sm font-bold text-[#161617]">{ex.sets} x {ex.reps}</p>
+                          <p className="text-xs text-[#8A8274]">{ex.restSeconds}s rest</p>
                         </div>
                       </div>
                     </div>
@@ -251,12 +227,21 @@ export default function WorkoutPage() {
           <button
             onClick={handleGenerate}
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium transition-colors"
+            className="w-full rounded-xl border border-[#ECE5D5] bg-white py-3 text-sm font-medium text-[#5C564B] transition-colors"
           >
-            Дахин үүсгэх
+            Generate again
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3 rounded-[28px] border border-[#ECE5D5] bg-white p-4 shadow-[0_18px_45px_rgba(219,215,195,0.22)]">
+      <h2 className="text-sm font-semibold text-[#4C463B]">{title}</h2>
+      {children}
     </div>
   )
 }

@@ -1,14 +1,18 @@
 import { z } from 'zod'
 
 export const registerSchema = z.object({
-  email: z.string().email('Зөв и-мэйл хаяг оруулна уу'),
-  password: z.string().min(6, 'Нууц үг хамгийн багадаа 6 тэмдэгт байна'),
+  email: z.string().email('Please enter a valid email'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
   name: z.string().min(1).optional(),
+  age: z.number().int().min(13).max(100).optional(),
+  weight: z.number().min(30).max(300).optional(),
+  gender: z.enum(['male', 'female']).optional(),
+  goal: z.enum(['lose', 'maintain', 'gain']).optional(),
 })
 
 export const loginSchema = z.object({
-  email: z.string().email('Зөв и-мэйл хаяг оруулна уу'),
-  password: z.string().min(1, 'Нууц үг оруулна уу'),
+  email: z.string().email('Please enter a valid email'),
+  password: z.string().min(1, 'Please enter your password'),
 })
 
 export const logFoodSchema = z.object({

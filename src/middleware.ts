@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/login', '/register']
-const PUBLIC_API_PATHS = ['/api/auth/login', '/api/auth/register']
+const PUBLIC_PATHS = ['/login', '/register', '/reset-password']
+const PUBLIC_API_PATHS = ['/api/auth/login', '/api/auth/register', '/api/auth/forgot-password', '/api/auth/reset-password']
 const COOKIE_NAME = 'calhub_token'
 
 // Simple in-memory rate limiter (resets on cold start)
