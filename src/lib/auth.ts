@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken'
+import { SignJWT, jwtVerify } from 'jose'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
-const JWT_SECRET = process.env.JWT_SECRET!
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET!)
 export const COOKIE_NAME = 'calhub_token'
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 days
 
@@ -19,38 +19,46 @@ interface JwtPayload {
   email: string
 }
 
-interface PasswordResetTokenPayload extends JwtPayload {
-  purpose: 'password_reset'
+// Password-reset tokens use a composite secret (JWT_SECRET + current passwordHash)
+// so the token is automatically invalidated when the password changes.
+function resetSecret(passwordHash: string) {
+  return new TextEncoder().encode(`${process.env.JWT_SECRET!}:${passwordHash}`)
 }
 
-export function signToken(payload: JwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' })
+export function signToken(payload: JwtPayload): Promise<string> {
+  return new SignJWT({ ...payload } as Record<string, unknown>)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('30d')
+    .sign(JWT_SECRET)
 }
 
-export function verifyToken(token: string): JwtPayload | null {
+export async function verifyToken(token: string): Promise<JwtPayload | null> {
   try {
-    return jwt.verify(token, JWT_SECRET) as JwtPayload
+    const { payload } = await jwtVerify(token, JWT_SECRET)
+    const userId = typeof payload.userId === 'string' ? payload.userId : null
+    const email = typeof payload.email === 'string' ? payload.email : null
+    if (!userId || !email) return null
+    return { userId, email }
   } catch {
     return null
   }
 }
 
-export function signPasswordResetToken({
-  userId,
-  email,
-  passwordHash,
-}: JwtPayload & { passwordHash: string }): string {
-  return jwt.sign(
-    { userId, email, purpose: 'password_reset' satisfies PasswordResetTokenPayload['purpose'] },
-    `${JWT_SECRET}:${passwordHash}`,
-    { expiresIn: '1h' },
-  )
+export function signPasswordResetToken({ userId, email, passwordHash }: JwtPayload & { passwordHash: string }): Promise<string> {
+  return new SignJWT({ userId, email, purpose: 'password_reset' } as Record<string, unknown>)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setExpirationTime('1h')
+    .sign(resetSecret(passwordHash))
 }
 
-export function verifyPasswordResetToken(token: string, passwordHash: string): PasswordResetTokenPayload | null {
+export async function verifyPasswordResetToken(token: string, passwordHash: string): Promise<(JwtPayload & { purpose: string }) | null> {
   try {
-    const payload = jwt.verify(token, `${JWT_SECRET}:${passwordHash}`) as PasswordResetTokenPayload
-    return payload.purpose === 'password_reset' ? payload : null
+    const { payload } = await jwtVerify(token, resetSecret(passwordHash))
+    if (payload.purpose !== 'password_reset') return null
+    const userId = typeof payload.userId === 'string' ? payload.userId : null
+    const email = typeof payload.email === 'string' ? payload.email : null
+    if (!userId || !email) return null
+    return { userId, email, purpose: 'password_reset' }
   } catch {
     return null
   }
@@ -62,6 +70,16 @@ export function setAuthCookie(response: NextResponse, token: string) {
 
 export function clearAuthCookie(response: NextResponse) {
   response.cookies.delete(COOKIE_NAME)
+}
+
+export function setLocaleCookie(response: NextResponse, locale: string) {
+  response.cookies.set('calhub_lang', locale === 'en' ? 'en' : 'mn', {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: COOKIE_MAX_AGE,
+    path: '/',
+  })
 }
 
 export async function getTokenFromCookies(): Promise<string | null> {
@@ -76,6 +94,6 @@ export function getTokenFromRequest(req: NextRequest): string | null {
 export async function getCurrentUserId(): Promise<string | null> {
   const token = await getTokenFromCookies()
   if (!token) return null
-  const payload = verifyToken(token)
+  const payload = await verifyToken(token)
   return payload?.userId ?? null
 }

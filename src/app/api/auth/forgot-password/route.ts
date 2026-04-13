@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     })
 
     if (user) {
-      const token = signPasswordResetToken({
+      const token = await signPasswordResetToken({
         userId: user.id,
         email: user.email,
         passwordHash: user.passwordHash,

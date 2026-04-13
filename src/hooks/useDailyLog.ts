@@ -9,8 +9,8 @@ export function useDailyLog(date?: string) {
 
   const fetchLogs = useCallback(async () => {
     setLoading(true)
-    const url = date ? `/api/log?date=${date}` : '/api/log'
-    const res = await fetch(url)
+    const localDate = date ?? new Date().toLocaleDateString('en-CA')
+    const res = await fetch(`/api/log?date=${localDate}`)
     const { data } = await res.json()
     setLogs(data ?? [])
     setLoading(false)
@@ -18,20 +18,55 @@ export function useDailyLog(date?: string) {
 
   useEffect(() => { fetchLogs() }, [fetchLogs])
 
-  const addLog = useCallback(async (entry: Omit<FoodLog, 'id' | 'userId' | 'createdAt'>) => {
-    const res = await fetch('/api/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(entry),
-    })
-    const { data } = await res.json()
-    if (data) setLogs(prev => [...prev, data])
-    return data
+  const addLog = useCallback(async (entry: Omit<FoodLog, 'id' | 'userId' | 'createdAt'>): Promise<{ data: FoodLog | null; error: string | null }> => {
+    try {
+      const res = await fetch('/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry),
+      })
+      const { data, error } = await res.json()
+      if (error) return { data: null, error }
+      setLogs(prev => [...prev, data])
+      return { data, error: null }
+    } catch {
+      return { data: null, error: 'Failed to save food log. Please try again.' }
+    }
   }, [])
 
-  const deleteLog = useCallback(async (id: string) => {
-    await fetch(`/api/log/${id}`, { method: 'DELETE' })
-    setLogs(prev => prev.filter(l => l.id !== id))
+  const deleteLog = useCallback(async (id: string): Promise<{ error: string | null }> => {
+    try {
+      const res = await fetch(`/api/log/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const { error } = await res.json()
+        return { error: error ?? 'Failed to delete entry.' }
+      }
+      setLogs(prev => prev.filter(l => l.id !== id))
+      return { error: null }
+    } catch {
+      return { error: 'Failed to delete entry. Please try again.' }
+    }
+  }, [])
+
+  const updateLog = useCallback(async (
+    id: string,
+    updates: Partial<Pick<FoodLog, 'calories' | 'protein' | 'fat' | 'carbs' | 'fiber' | 'servingSize' | 'quantity' | 'mealType'>>,
+  ): Promise<{ data: FoodLog | null; error: string | null }> => {
+    try {
+      const res = await fetch(`/api/log/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      })
+      const { data, error } = await res.json()
+      if (error) return { data: null, error }
+      if (data) {
+        setLogs(prev => prev.map(l => (l.id === id ? { ...l, ...data } : l)))
+      }
+      return { data: data as FoodLog, error: null }
+    } catch {
+      return { data: null, error: 'Failed to update entry. Please try again.' }
+    }
   }, [])
 
   const stats: DailyStats = {
@@ -44,5 +79,5 @@ export function useDailyLog(date?: string) {
     logs,
   }
 
-  return { logs, loading, stats, fetchLogs, addLog, deleteLog }
+  return { logs, loading, stats, fetchLogs, addLog, deleteLog, updateLog }
 }

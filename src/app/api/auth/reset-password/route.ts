@@ -7,7 +7,7 @@ import { verifyPasswordResetToken } from '@/lib/auth'
 const resetPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email'),
   token: z.string().min(1, 'Missing reset token'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 })
 
 export async function POST(request: Request) {
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const payload = verifyPasswordResetToken(token, user.passwordHash)
+    const payload = await verifyPasswordResetToken(token, user.passwordHash)
     if (!payload || payload.userId !== user.id || payload.email !== user.email) {
       return NextResponse.json(
         { data: null, error: 'This reset link is invalid or has expired.' },

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Bell, ChevronRight, Drumstick, UtensilsCrossed, Wheat } from 'lucide-react'
+import { Bell, ChevronRight, Drumstick, Pencil, Trash2, UtensilsCrossed, Wheat } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { useDailyLog } from '@/hooks/useDailyLog'
@@ -9,6 +9,7 @@ import { useWater } from '@/hooks/useWater'
 import { useAuth } from '@/hooks/useAuth'
 import { buildDashboardNotifications } from '@/lib/dashboard-notifications'
 import { MEAL_TYPES } from '@/lib/constants'
+import type { FoodLog, MealType } from '@/types'
 
 interface WeekChip {
   day: string
@@ -46,18 +47,54 @@ function buildWeekChips(now: Date): WeekChip[] {
   })
 }
 
+interface EditForm {
+  quantity: number
+  calories: number
+  protein: number
+  fat: number
+  carbs: number
+  mealType: MealType
+}
+
 export default function HomePage() {
   const { user } = useAuth()
-  const { logs, loading, stats } = useDailyLog()
+  const { logs, loading, stats, deleteLog, updateLog } = useDailyLog()
   const { glasses } = useWater()
   const [greeting, setGreeting] = useState('Good Morning')
   const [weekChips, setWeekChips] = useState<WeekChip[]>([])
+  const [editingLog, setEditingLog] = useState<FoodLog | null>(null)
+  const [editForm, setEditForm] = useState<EditForm>({
+    quantity: 1,
+    calories: 0,
+    protein: 0,
+    fat: 0,
+    carbs: 0,
+    mealType: 'other',
+  })
 
   useEffect(() => {
     const now = new Date()
     setGreeting(buildGreeting(now.getHours()))
     setWeekChips(buildWeekChips(now))
   }, [])
+
+  const openEdit = (log: FoodLog) => {
+    setEditingLog(log)
+    setEditForm({
+      quantity: log.quantity,
+      calories: log.calories,
+      protein: log.protein,
+      fat: log.fat,
+      carbs: log.carbs,
+      mealType: log.mealType,
+    })
+  }
+
+  const saveEdit = async () => {
+    if (!editingLog) return
+    await updateLog(editingLog.id, editForm)
+    setEditingLog(null)
+  }
 
   const calorieGoal = user?.calorieGoal ?? 2000
   const carbGoal = user?.carbGoal ?? 250
@@ -73,16 +110,6 @@ export default function HomePage() {
       logs: logs.filter((log) => log.mealType === meal.value),
     }))
     .filter((meal) => meal.logs.length > 0)
-
-  const mealCards = logsByMeal.map((meal) => ({
-    value: meal.value,
-    label: meal.labelEn,
-    emoji: meal.emoji,
-    totalCalories: Math.round(meal.logs.reduce((sum, log) => sum + log.calories * log.quantity, 0)),
-    cover: meal.logs.find((log) => log.imageUrl)?.imageUrl ?? null,
-    caption: meal.logs.slice(0, 2).map((log) => log.mongolianName ?? log.foodName).join(' / '),
-    itemCount: meal.logs.length,
-  }))
 
   return (
     <div className="min-h-screen">
@@ -227,7 +254,7 @@ export default function HomePage() {
                 <div key={item} className="h-40 rounded-[28px] border border-[#ECE5D5] bg-white skeleton" />
               ))}
             </div>
-          ) : mealCards.length === 0 ? (
+          ) : logsByMeal.length === 0 ? (
             <div className="rounded-[30px] border border-dashed border-[#E4DCCB] bg-white p-6 shadow-[0_18px_45px_rgba(219,215,195,0.22)]">
               <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FFF1EA] text-[#F57A4A]">
                 <UtensilsCrossed className="h-6 w-6" strokeWidth={2} />
@@ -242,36 +269,199 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {mealCards.map((card) => (
-                <article
-                  key={card.value}
-                  className="relative overflow-hidden rounded-[28px] border border-[#ECE5D5] bg-white shadow-[0_18px_45px_rgba(219,215,195,0.22)]"
-                >
-                  {card.cover ? (
-                    <img src={card.cover} alt={card.label} className="h-40 w-full object-cover" />
-                  ) : (
-                    <div className="flex h-40 items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(199,228,76,0.18),_transparent_34%),linear-gradient(135deg,_#F8F2E4_0%,_#F1E7D3_80%)] text-5xl">
-                      {card.emoji}
-                    </div>
-                  )}
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#201B16]/70 via-transparent to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-4">
-                    <div>
-                      <div className="mb-2 inline-flex rounded-full bg-white/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[#655D50]">
-                        {card.itemCount} item{card.itemCount > 1 ? 's' : ''}
+              {logsByMeal.map((meal) => {
+                const totalCalories = Math.round(meal.logs.reduce((sum, log) => sum + log.calories * log.quantity, 0))
+                const cover = meal.logs.find((log) => log.imageUrl)?.imageUrl ?? null
+                return (
+                  <article
+                    key={meal.value}
+                    className="overflow-hidden rounded-[28px] border border-[#ECE5D5] bg-white shadow-[0_18px_45px_rgba(219,215,195,0.22)]"
+                  >
+                    {/* Cover image / hero area */}
+                    <div className="relative">
+                      {cover ? (
+                        <img src={cover} alt={meal.labelEn} className="h-36 w-full object-cover" />
+                      ) : (
+                        <div className="flex h-36 items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(199,228,76,0.18),_transparent_34%),linear-gradient(135deg,_#F8F2E4_0%,_#F1E7D3_80%)] text-5xl">
+                          {meal.emoji}
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#201B16]/60 via-transparent to-transparent" />
+                      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-4">
+                        <div>
+                          <div className="mb-1 inline-flex rounded-full bg-white/80 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[#655D50]">
+                            {meal.logs.length} item{meal.logs.length > 1 ? 's' : ''}
+                          </div>
+                          <h3 className="text-xl font-semibold tracking-[-0.03em] text-white">{meal.labelEn}</h3>
+                        </div>
+                        <div className="rounded-[22px] bg-white/85 px-4 py-3 text-right backdrop-blur-sm">
+                          <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#7A7367]">Total</div>
+                          <div className="mt-1 text-base font-semibold text-[#161617]">{totalCalories} kcal</div>
+                        </div>
                       </div>
-                      <h3 className="text-2xl font-semibold tracking-[-0.03em] text-white">{card.label}</h3>
-                      <p className="mt-1 max-w-[240px] text-sm text-white/78">{card.caption}</p>
                     </div>
 
-                    <div className="rounded-[22px] bg-white/85 px-4 py-3 text-right backdrop-blur-sm">
-                      <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-[#7A7367]">Total</div>
-                      <div className="mt-1 text-lg font-semibold text-[#161617]">{card.totalCalories} kcal</div>
-                    </div>
+                    {/* Individual food item rows */}
+                    <ul className="divide-y divide-[#F4EEE2]">
+                      {meal.logs.map((item) => (
+                        <li key={item.id} className="flex items-center gap-3 px-4 py-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-[#161617]">
+                              {item.mongolianName ?? item.foodName}
+                            </p>
+                            <p className="mt-0.5 text-xs text-[#97907F]">
+                              {item.quantity > 1 ? `${item.quantity} × ` : ''}{item.servingSize} · {Math.round(item.calories * item.quantity)} kcal
+                            </p>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-1">
+                            <button
+                              onClick={() => openEdit(item)}
+                              className="flex h-8 w-8 items-center justify-center rounded-full text-[#97907F] transition-colors hover:bg-[#EDF5FF] hover:text-[#3B82F6]"
+                              aria-label={`Edit ${item.foodName}`}
+                            >
+                              <Pencil className="h-4 w-4" strokeWidth={2} />
+                            </button>
+                            <button
+                              onClick={() => deleteLog(item.id)}
+                              className="flex h-8 w-8 items-center justify-center rounded-full text-[#97907F] transition-colors hover:bg-[#FFF0EE] hover:text-[#EF4444]"
+                              aria-label={`Delete ${item.foodName}`}
+                            >
+                              <Trash2 className="h-4 w-4" strokeWidth={2} />
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </article>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Edit modal */}
+          {editingLog && (
+            <div
+              className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+              onClick={() => setEditingLog(null)}
+            >
+              <div
+                className="w-full max-w-lg rounded-t-[28px] bg-white p-6 shadow-[0_-12px_40px_rgba(0,0,0,0.14)]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="mb-1 h-1 w-10 rounded-full bg-[#E4DCCB] mx-auto" />
+                <h3 className="mt-4 text-lg font-semibold tracking-[-0.03em] text-[#161617]">
+                  {editingLog.mongolianName ?? editingLog.foodName}
+                </h3>
+                {editingLog.mongolianName && (
+                  <p className="mt-0.5 text-sm text-[#97907F]">{editingLog.foodName}</p>
+                )}
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  {/* Quantity */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-[#7B7467]">Quantity</label>
+                    <input
+                      type="number"
+                      min="0.1"
+                      step="0.1"
+                      value={editForm.quantity}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, quantity: parseFloat(e.target.value) || 1 }))
+                      }
+                      className="w-full rounded-xl border border-[#E4DCCB] px-3 py-2 text-sm text-[#161617] focus:outline-none focus:ring-2 focus:ring-[#F57A4A]/40"
+                    />
                   </div>
-                </article>
-              ))}
+
+                  {/* Calories */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-[#7B7467]">Calories</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={editForm.calories}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, calories: parseFloat(e.target.value) || 0 }))
+                      }
+                      className="w-full rounded-xl border border-[#E4DCCB] px-3 py-2 text-sm text-[#161617] focus:outline-none focus:ring-2 focus:ring-[#F57A4A]/40"
+                    />
+                  </div>
+
+                  {/* Protein */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-[#7B7467]">Protein (g)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={editForm.protein}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, protein: parseFloat(e.target.value) || 0 }))
+                      }
+                      className="w-full rounded-xl border border-[#E4DCCB] px-3 py-2 text-sm text-[#161617] focus:outline-none focus:ring-2 focus:ring-[#F57A4A]/40"
+                    />
+                  </div>
+
+                  {/* Carbs */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-[#7B7467]">Carbs (g)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={editForm.carbs}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, carbs: parseFloat(e.target.value) || 0 }))
+                      }
+                      className="w-full rounded-xl border border-[#E4DCCB] px-3 py-2 text-sm text-[#161617] focus:outline-none focus:ring-2 focus:ring-[#F57A4A]/40"
+                    />
+                  </div>
+
+                  {/* Fat */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-[#7B7467]">Fat (g)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={editForm.fat}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, fat: parseFloat(e.target.value) || 0 }))
+                      }
+                      className="w-full rounded-xl border border-[#E4DCCB] px-3 py-2 text-sm text-[#161617] focus:outline-none focus:ring-2 focus:ring-[#F57A4A]/40"
+                    />
+                  </div>
+
+                  {/* Meal type */}
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-[#7B7467]">Meal Type</label>
+                    <select
+                      value={editForm.mealType}
+                      onChange={(e) =>
+                        setEditForm((f) => ({ ...f, mealType: e.target.value as MealType }))
+                      }
+                      className="w-full rounded-xl border border-[#E4DCCB] px-3 py-2 text-sm text-[#161617] focus:outline-none focus:ring-2 focus:ring-[#F57A4A]/40"
+                    >
+                      <option value="breakfast">Breakfast</option>
+                      <option value="lunch">Lunch</option>
+                      <option value="dinner">Dinner</option>
+                      <option value="snack">Snack</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex gap-3">
+                  <button
+                    onClick={() => setEditingLog(null)}
+                    className="flex-1 rounded-2xl border border-[#E4DCCB] py-3 text-sm font-medium text-[#7B7467] transition-colors hover:bg-[#FAF7F2]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={saveEdit}
+                    className="flex-1 rounded-2xl bg-[#F57A4A] py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </section>

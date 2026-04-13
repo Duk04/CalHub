@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
-import { signToken, setAuthCookie } from '@/lib/auth'
+import { signToken, setAuthCookie, setLocaleCookie } from '@/lib/auth'
 import { loginSchema } from '@/lib/validations'
 
 export async function POST(request: Request) {
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
       )
     }
 
-    const token = signToken({ userId: user.id, email: user.email })
+    const token = await signToken({ userId: user.id, email: user.email })
 
     const response = NextResponse.json({
       data: {
@@ -47,6 +47,7 @@ export async function POST(request: Request) {
       error: null,
     })
     setAuthCookie(response, token)
+    setLocaleCookie(response, user.language)
     return response
   } catch (e) {
     console.error('[login]', e)

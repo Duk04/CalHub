@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUserId } from '@/lib/auth'
+import { getCurrentUserId, clearAuthCookie, setLocaleCookie } from '@/lib/auth'
 import { updateUserSchema } from '@/lib/validations'
 
 export async function GET() {
@@ -39,5 +39,20 @@ export async function PATCH(request: Request) {
     },
   })
 
-  return NextResponse.json({ data: user, error: null })
+  const response = NextResponse.json({ data: user, error: null })
+  if (result.data.language) {
+    setLocaleCookie(response, result.data.language)
+  }
+  return response
+}
+
+export async function DELETE() {
+  const userId = await getCurrentUserId()
+  if (!userId) return NextResponse.json({ data: null, error: 'Unauthorized' }, { status: 401 })
+
+  await prisma.user.delete({ where: { id: userId } })
+
+  const response = NextResponse.json({ data: { success: true }, error: null })
+  clearAuthCookie(response)
+  return response
 }

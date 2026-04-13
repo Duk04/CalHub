@@ -7,39 +7,56 @@ interface Props {
   onRemove: () => void
 }
 
-export default function WaterTracker({ glasses, goal, onAdd, onRemove }: Props) {
+export function WaterTracker({ glasses, goal, onAdd, onRemove }: Props) {
   const pct = Math.min((glasses / goal) * 100, 100)
+  const isComplete = glasses >= goal
 
   return (
-    <div className="bg-[#1C2A3A] rounded-2xl p-4 border border-[#1894E0]/20">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-[#1894E0]/20 flex items-center justify-center">
-            <span className="text-base">💧</span>
+    <div className="rounded-[24px] border border-[#EDE8D9] bg-white p-5 shadow-sm">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-[#EAF6FD] text-lg">
+            💧
           </div>
-          <span className="font-semibold text-white text-sm">Ус</span>
+          <div>
+            <p className="text-sm font-semibold text-[#1B1B1D]">Water</p>
+            <p className="text-xs text-[#6B6560]">Daily hydration</p>
+          </div>
         </div>
-        <span className="text-sm text-[#8E8E93]">
-          <span className="font-bold text-[#1894E0]">{glasses}</span>/{goal} аяга
-        </span>
+        <div className="text-right">
+          <span className="text-lg font-semibold text-[#1B1B1D]">{glasses}</span>
+          <span className="text-sm text-[#A09A90]">/{goal}</span>
+          <p className="text-xs text-[#A09A90]">glasses</p>
+        </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="h-1.5 bg-[#2C2C2E] rounded-full overflow-hidden mb-3">
+      <div className="mb-4 h-2 overflow-hidden rounded-full bg-[#F0EBE1]">
         <div
           className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: '#1894E0' }}
+          style={{
+            width: `${pct}%`,
+            backgroundColor: isComplete ? '#C7E44C' : '#38BDF8',
+          }}
         />
       </div>
 
-      <div className="flex items-center gap-1 mb-3 flex-wrap">
+      <div className="mb-4 flex flex-wrap gap-1.5">
         {Array.from({ length: goal }).map((_, i) => (
           <button
             key={i}
-            onClick={() => i < glasses ? onRemove() : onAdd()}
-            className={`text-lg transition-all active:scale-90 ${i < glasses ? 'opacity-100' : 'opacity-20'}`}
+            onClick={() => (i < glasses ? onRemove() : onAdd())}
+            className="flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90"
+            style={{
+              backgroundColor: i < glasses ? '#EAF6FD' : '#F5F1EA',
+            }}
+            aria-label={i < glasses ? 'Remove glass' : 'Add glass'}
           >
-            💧
+            <span
+              className="text-base leading-none transition-opacity"
+              style={{ opacity: i < glasses ? 1 : 0.3 }}
+            >
+              💧
+            </span>
           </button>
         ))}
       </div>
@@ -48,19 +65,20 @@ export default function WaterTracker({ glasses, goal, onAdd, onRemove }: Props) 
         <button
           onClick={onRemove}
           disabled={glasses === 0}
-          className="flex-1 py-2 rounded-xl border border-[#2C2C2E] text-sm font-medium text-[#8E8E93] disabled:opacity-30 active:bg-[#2C2C2E] transition-colors"
+          className="flex h-11 flex-1 items-center justify-center rounded-[14px] border border-[#EDE8D9] bg-[#FBFAF6] text-sm font-semibold text-[#6B6560] transition-colors active:bg-[#F0EBE1] disabled:opacity-30"
         >
           −
         </button>
         <button
           onClick={onAdd}
           disabled={glasses >= goal}
-          className="flex-1 py-2 rounded-xl text-sm font-medium text-white disabled:opacity-30 transition-colors active:opacity-80"
-          style={{ backgroundColor: '#1894E0' }}
+          className="flex h-11 flex-1 items-center justify-center rounded-[14px] bg-[#38BDF8] text-sm font-semibold text-white transition-colors active:opacity-85 disabled:opacity-30"
         >
-          + Аяга нэмэх
+          + Add glass
         </button>
       </div>
     </div>
   )
 }
+
+export default WaterTracker

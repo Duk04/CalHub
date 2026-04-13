@@ -13,23 +13,21 @@ export async function GET(request: NextRequest) {
   let startDate: Date
   let endDate: Date
 
-  if (date) {
-    startDate = new Date(date)
-    startDate.setHours(0, 0, 0, 0)
-    endDate = new Date(date)
-    endDate.setHours(23, 59, 59, 999)
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    startDate = new Date(`${date}T00:00:00.000Z`)
+    endDate = new Date(`${date}T00:00:00.000Z`)
+    endDate.setUTCDate(endDate.getUTCDate() + 1)
   } else {
-    // Default to today
-    startDate = new Date()
-    startDate.setHours(0, 0, 0, 0)
-    endDate = new Date()
-    endDate.setHours(23, 59, 59, 999)
+    const today = new Date().toISOString().slice(0, 10)
+    startDate = new Date(`${today}T00:00:00.000Z`)
+    endDate = new Date(`${today}T00:00:00.000Z`)
+    endDate.setUTCDate(endDate.getUTCDate() + 1)
   }
 
   const logs = await prisma.foodLog.findMany({
     where: {
       userId,
-      loggedAt: { gte: startDate, lte: endDate },
+      loggedAt: { gte: startDate, lt: endDate },
     },
     orderBy: { loggedAt: 'asc' },
   })

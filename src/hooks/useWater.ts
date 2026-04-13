@@ -15,14 +15,26 @@ export function useWater(date?: string) {
       .finally(() => setLoading(false))
   }, [today])
 
-  const logWater = useCallback(async (newGlasses: number) => {
+  const logWater = useCallback(async (newGlasses: number): Promise<{ error: string | null }> => {
+    const previous = glasses
     setGlasses(newGlasses)
-    await fetch('/api/water', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ glasses: newGlasses, date: today }),
-    })
-  }, [today])
+    try {
+      const res = await fetch('/api/water', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ glasses: newGlasses, date: today }),
+      })
+      if (!res.ok) {
+        setGlasses(previous)
+        const { error } = await res.json()
+        return { error: error ?? 'Failed to save water intake.' }
+      }
+      return { error: null }
+    } catch {
+      setGlasses(previous)
+      return { error: 'Failed to save water intake. Please try again.' }
+    }
+  }, [glasses, today])
 
   return { glasses, loading, logWater }
 }

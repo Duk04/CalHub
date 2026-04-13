@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import { analyzeFood } from '@/lib/openai'
+import { getCurrentUserId } from '@/lib/auth'
 
 export async function POST(request: Request) {
+  const userId = await getCurrentUserId()
+  if (!userId) return NextResponse.json({ data: null, error: 'Unauthorized' }, { status: 401 })
+
   try {
     const formData = await request.formData()
     const file = formData.get('image') as File | null

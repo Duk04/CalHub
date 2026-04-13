@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
-import { signToken, setAuthCookie } from '@/lib/auth'
+import { signToken, setAuthCookie, setLocaleCookie } from '@/lib/auth'
 import { registerSchema } from '@/lib/validations'
 import { estimateOnboardingTargets } from '@/lib/calories'
 
@@ -62,10 +62,11 @@ export async function POST(request: Request) {
       },
     })
 
-    const token = signToken({ userId: user.id, email: user.email })
+    const token = await signToken({ userId: user.id, email: user.email })
 
     const response = NextResponse.json({ data: user, error: null }, { status: 201 })
     setAuthCookie(response, token)
+    setLocaleCookie(response, user.language)
     return response
   } catch {
     return NextResponse.json({ data: null, error: 'Серверийн алдаа.' }, { status: 500 })

@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const registerSchema = z.object({
   email: z.string().email('Please enter a valid email'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
   name: z.string().min(1).optional(),
   age: z.number().int().min(13).max(100).optional(),
   weight: z.number().min(30).max(300).optional(),
@@ -46,6 +46,11 @@ export const updateUserSchema = z.object({
   language: z.enum(['mn', 'en']).optional(),
 })
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+})
+
 export const waterLogSchema = z.object({
   glasses: z.number().min(1).max(30),
   date: z.string().optional(),
@@ -54,4 +59,15 @@ export const waterLogSchema = z.object({
 export const weightLogSchema = z.object({
   weight: z.number().min(20).max(500),
   date: z.string().optional(),
+})
+
+export const updateLogSchema = z.object({
+  calories: z.number().min(0).optional(),
+  protein: z.number().min(0).optional(),
+  fat: z.number().min(0).optional(),
+  carbs: z.number().min(0).optional(),
+  fiber: z.number().min(0).optional(),
+  servingSize: z.string().min(1).optional(),
+  quantity: z.number().min(0.1).optional(),
+  mealType: z.enum(['breakfast', 'lunch', 'dinner', 'snack', 'other']).optional(),
 })

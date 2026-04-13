@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { verifyTokenEdge } from '@/lib/auth-edge'
 
 const PUBLIC_PATHS = ['/login', '/register', '/reset-password']
 const PUBLIC_API_PATHS = ['/api/auth/login', '/api/auth/register', '/api/auth/forgot-password', '/api/auth/reset-password']
@@ -20,47 +21,6 @@ function rateLimit(ip: string, limit: number, windowMs: number): boolean {
   if (entry.count >= limit) return false
   entry.count++
   return true
-}
-
-// Edge-compatible JWT verification using Web Crypto API
-async function verifyJWT(token: string): Promise<{ userId: string; email: string } | null> {
-  try {
-    const parts = token.split('.')
-    if (parts.length !== 3) return null
-    const [rawHeader, rawPayload, rawSignature] = parts
-
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
-    const key = await crypto.subtle.importKey(
-      'raw',
-      secret,
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['verify'],
-    )
-
-    // base64url → base64 → Uint8Array
-    const b64 = rawSignature.replace(/-/g, '+').replace(/_/g, '/')
-    const binary = atob(b64)
-    const signature = Uint8Array.from(binary, c => c.charCodeAt(0))
-
-    const valid = await crypto.subtle.verify(
-      'HMAC',
-      key,
-      signature,
-      new TextEncoder().encode(`${rawHeader}.${rawPayload}`),
-    )
-    if (!valid) return null
-
-    const payload = JSON.parse(
-      atob(rawPayload.replace(/-/g, '+').replace(/_/g, '/')),
-    )
-
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null
-
-    return { userId: payload.userId, email: payload.email }
-  } catch {
-    return null
-  }
 }
 
 function getToken(request: NextRequest): string | null {
@@ -95,7 +55,7 @@ export async function middleware(request: NextRequest) {
   // Protect API routes
   if (pathname.startsWith('/api/')) {
     const token = getToken(request)
-    const payload = token ? await verifyJWT(token) : null
+    const payload = token ? await verifyTokenEdge(token) : null
 
     if (!payload) {
       return NextResponse.json({ data: null, error: 'Нэвтрэх шаардлагатай.' }, { status: 401 })
@@ -109,7 +69,7 @@ export async function middleware(request: NextRequest) {
   // Redirect authenticated users away from auth pages
   if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
     const token = getToken(request)
-    const payload = token ? await verifyJWT(token) : null
+    const payload = token ? await verifyTokenEdge(token) : null
     if (payload) {
       return NextResponse.redirect(new URL('/', request.url))
     }
@@ -118,7 +78,7 @@ export async function middleware(request: NextRequest) {
 
   // Protect dashboard routes
   const token = getToken(request)
-  const payload = token ? await verifyJWT(token) : null
+  const payload = token ? await verifyTokenEdge(token) : null
 
   if (!payload) {
     return NextResponse.redirect(new URL('/login', request.url))

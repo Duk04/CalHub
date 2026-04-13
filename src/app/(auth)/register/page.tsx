@@ -134,7 +134,7 @@ export default function RegisterPage() {
 
     if (!name.trim()) nextErrors.name = 'Please enter your full name'
     if (!email.trim()) nextErrors.email = 'Please enter your email'
-    if (!password || password.length < 6) nextErrors.password = 'Password must be at least 6 characters'
+    if (!password || password.length < 8) nextErrors.password = 'Password must be at least 8 characters'
 
     setErrors(nextErrors)
     return !nextErrors.name && !nextErrors.email && !nextErrors.password

@@ -284,7 +284,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  const [pwForm, setPwForm] = useState({ newPassword: '', confirmPassword: '' })
+  const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' })
   const [pwSaving, setPwSaving] = useState(false)
   const [pwChanged, setPwChanged] = useState(false)
   const [pwError, setPwError] = useState('')
@@ -298,6 +298,7 @@ export default function ProfilePage() {
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -341,6 +342,10 @@ export default function ProfilePage() {
 
   async function handleChangePassword() {
     setPwError('')
+    if (!pwForm.currentPassword) {
+      setPwError('Please enter your current password')
+      return
+    }
     if (pwForm.newPassword.length < 8) {
       setPwError('Password must be at least 8 characters')
       return
@@ -351,13 +356,31 @@ export default function ProfilePage() {
     }
 
     setPwSaving(true)
-    await fetch('/api/user', {
+    const res = await fetch('/api/user/password', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pwForm.newPassword }),
+      body: JSON.stringify({ currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword }),
     })
+    const { error } = await res.json()
     setPwSaving(false)
+
+    if (error) {
+      setPwError(error)
+      return
+    }
     setPwChanged(true)
+  }
+
+  async function handleDeleteAccount() {
+    setDeleting(true)
+    const res = await fetch('/api/user', { method: 'DELETE' })
+    const { error } = await res.json()
+    if (error) {
+      setDeleting(false)
+      setShowDeleteConfirm(false)
+      return
+    }
+    logout()
   }
 
   if (view === 'changePassword') {
@@ -369,12 +392,20 @@ export default function ProfilePage() {
           onBack={() => {
             setView('main')
             setPwChanged(false)
-            setPwForm({ newPassword: '', confirmPassword: '' })
+            setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
             setPwError('')
           }}
         />
 
         <SectionCard className="space-y-4">
+          <InputField
+            label="Current Password"
+            value={pwForm.currentPassword}
+            onChange={(v) => setPwForm((prev) => ({ ...prev, currentPassword: v }))}
+            placeholder="Enter current password"
+            type="password"
+            icon={<ShieldAlert className="h-5 w-5" strokeWidth={2} />}
+          />
           <InputField
             label="New Password"
             value={pwForm.newPassword}
@@ -389,7 +420,7 @@ export default function ProfilePage() {
             onChange={(v) => setPwForm((prev) => ({ ...prev, confirmPassword: v }))}
             placeholder="Confirm new password"
             type="password"
-            icon={<ShieldAlert className="h-5 w-5" strokeWidth={2} />}
+            icon={<LockKeyhole className="h-5 w-5" strokeWidth={2} />}
           />
           {pwError && <p className="text-xs font-medium text-[#D45541]">{pwError}</p>}
         </SectionCard>
@@ -415,7 +446,7 @@ export default function ProfilePage() {
                   onClick={() => {
                     setView('main')
                     setPwChanged(false)
-                    setPwForm({ newPassword: '', confirmPassword: '' })
+                    setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
                   }}
                 >
                   Back to profile
@@ -533,8 +564,12 @@ export default function ProfilePage() {
                 >
                   Cancel
                 </button>
-                <button className="flex-1 rounded-full bg-[#E45E45] py-3 text-sm font-semibold text-white">
-                  Delete
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                  className="flex-1 rounded-full bg-[#E45E45] py-3 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  {deleting ? 'Deleting…' : 'Delete'}
                 </button>
               </div>
             </div>
