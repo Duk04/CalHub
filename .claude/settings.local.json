@@ -3,7 +3,21 @@
     "allow": [
       "Bash(grep -v \"^$\")",
       "Bash(npx tsc:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "WebSearch",
+      "WebFetch(domain:www.calai.app)",
+      "WebFetch(domain:play.google.com)",
+      "WebFetch(domain:www.sugar-frees.com)",
+      "WebFetch(domain:apps.apple.com)",
+      "WebFetch(domain:www.cnbc.com)",
+      "WebFetch(domain:www.eesel.ai)",
+      "WebFetch(domain:nutriscan.app)",
+      "WebFetch(domain:techcrunch.com)",
+      "WebFetch(domain:www.nutritioncoachingacademy.com)",
+      "WebFetch(domain:screensdesign.com)",
+      "WebFetch(domain:news.ycombinator.com)",
+      "WebFetch(domain:codingworkx.com)",
+      "WebFetch(domain:www.globenewswire.com)"
     ]
   }
 }
